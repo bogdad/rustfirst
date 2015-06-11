@@ -24,12 +24,18 @@ impl Node {
     } 
 }
 
+
 fn main() {
     let node = Node::new();
-    Server::http(hello).listen("127.0.0.1:3001").unwrap();
+    Server::http(|req : Request,res:Response<Fresh>| {
+      let mut res = res.start().unwrap();
+      print!("{:?}", node.state);
+      res.end().unwrap();
+    }).listen("127.0.0.1:3001").unwrap();
 }
 
-fn hello(req: Request, res: Response<Fresh>) {
+fn hello(node:Node, req: Request, res: Response<Fresh>) {
+
     let mut res = res.start().unwrap();
     let uri:String = format!("{:?}", req.uri);
     match uri.find("/status") {

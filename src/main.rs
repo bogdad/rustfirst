@@ -27,21 +27,14 @@ impl Node {
 
 fn main() {
     let node = Node::new();
-    Server::http(|req : Request,res:Response<Fresh>| {
+    Server::http(move |req : Request,res:Response<Fresh>| {
       let mut res = res.start().unwrap();
-      print!("{:?}", node.state);
+      let uri:String = format!("{:?}", req.uri);
+      match uri.find("/status") {
+        Some(_) => res.write_all(format!("Status {:?}",node.state).as_bytes()).unwrap(),
+        None => res.write_all(format!("Hello {:?}", uri).as_bytes()).unwrap()
+      }
       res.end().unwrap();
     }).listen("127.0.0.1:3001").unwrap();
-}
-
-fn hello(node:Node, req: Request, res: Response<Fresh>) {
-
-    let mut res = res.start().unwrap();
-    let uri:String = format!("{:?}", req.uri);
-    match uri.find("/status") {
-        Some(_) => res.write_all(b"Status").unwrap(),
-        None => res.write_all(format!("Hello {:?}", uri).as_bytes()).unwrap()
-    }
-    res.end().unwrap();
 }
 

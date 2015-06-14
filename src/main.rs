@@ -18,8 +18,17 @@ enum NodeState {
     Leader
 }
 
-#[derive(Sync)]
-enum InternalEvent iml{
+struct InternalEvent {
+    class : InternalEventType
+}
+
+impl InternalEvent {
+    pub fn newCheckCandidate() -> InternalEvent {
+        InternalEvent{ class: InternalEventType::CheckCandidate }
+    }
+}
+
+enum InternalEventType {
     CheckCandidate
 }
 
@@ -43,11 +52,11 @@ impl Node {
             t : t}
     }
 
-    pub fn createFollowerCandidateChecker(self) {
+    pub fn createFollowerCandidateChecker(&self) -> JoinHandle<u32> {
         thread::spawn(||{
             thread::sleep_ms(self.election_msec);
             if (self.state != NodeState::Leader) {
-                self.tx.send(InternalEvent::CheckCandidate);
+                self.tx.send(InternalEvent::newCheckCandidate());
             }
             1
         })

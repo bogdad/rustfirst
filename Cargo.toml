@@ -5,3 +5,4 @@ authors = ["Vladimir Shakhov <bogdad@gmail.com>"]
 
 [dependencies]
 hyper = "0.5.2"
+rand = "0.3"

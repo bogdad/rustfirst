@@ -5,6 +5,7 @@ use std::io::Write;
 use std::thread::JoinHandle;
 use std::thread;
 use std::sync::mpsc::*;
+use std::sync::Arc;
 
 use hyper::Server;
 use hyper::server::Request;
@@ -18,27 +19,15 @@ enum NodeState {
     Leader
 }
 
-struct InternalEvent {
-    class : InternalEventType
-}
-
-impl InternalEvent {
-    pub fn newCheckCandidate() -> InternalEvent {
-        InternalEvent{ class: InternalEventType::CheckCandidate }
-    }
-}
-
-enum InternalEventType {
-    CheckCandidate
-}
-
 struct Node {
     state: NodeState,
     election_msec: u32,
-    tx: Sender<InternalEvent>,
-    rx: Receiver<InternalEvent>,
+    tx: Sender<&'static String>,
+    rx: Receiver<&'static String>,
     t: JoinHandle<u32>
 }
+
+static checkCandidate:String = "checkCandidate".to_string();
 
 impl Node {
     pub fn new() -> Node {
@@ -48,7 +37,7 @@ impl Node {
         });
         Node{
             state: NodeState::Follower,
-            election_msec: rand::random::<u32>(), tx: tx, rx: rx,
+            election_msec: rand::random::<u32>(), tx: tx.clone(), rx: rx,
             t : t}
     }
 
@@ -56,7 +45,8 @@ impl Node {
         thread::spawn(||{
             thread::sleep_ms(self.election_msec);
             if (self.state != NodeState::Leader) {
-                self.tx.send(InternalEvent::newCheckCandidate());
+                let event = "checkCandidate".to_string();
+                self.tx.send(event);
             }
             1
         })

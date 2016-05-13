@@ -27,41 +27,21 @@ enum NodeState {
 struct Node {
     id: i32,
     state: NodeState,
-    election_msec: u32,
-    tx: Sender<String>,
-    rx: Receiver<String>,
-    t: JoinHandle<u32>
+    election_msec: u32
 }
-
-static checkCandidate:String = "checkCandidate".to_string();
 
 impl Node {
     pub fn new(id: i32) -> Node {
-        let (tx, rx) = channel();
-        let t = thread::spawn(||{
-            1
-        });
-        Node{
+        Node {
             id: id,
             state: NodeState::Follower,
-            election_msec: rand::random::<u32>(), tx: tx.clone(), rx: rx,
-            t : t}
+            election_msec: rand::random::<u32>()
+        }
     }
 }
 
 fn nodeById(id: i32) -> Node {
-
-}
-
-fn actorHttp(req: Request, res: Response) {
-    let mut res = res.start().unwrap();
-    let uri: String = format!("{:?}", req.uri);
-    let node = nodeById();
-    match uri.find("/status") {
-        Some(_) => res.write_all(format!("Status {:?}",node.state).as_bytes()).unwrap(),
-        None => res.write_all(format!("Hello {:?}", uri).as_bytes()).unwrap()
-    }
-    res.end().unwrap();
+    Node::new(id)
 }
 
 fn main() {
@@ -72,8 +52,10 @@ fn main() {
     Iron::new(router).http("localhost:3000").unwrap();
 
     fn stateHandler(req: &mut Request) -> IronResult<Response> {
-        let ref id = req.extensions.get::<Router>().unwrap().find("id");
+        let idStr = req.extensions.get::<Router>().unwrap()
+            .find("id").unwrap();
+        let id = idStr.parse::<i32>().unwrap();
         let node = nodeById(id);
-        Ok(Response::with((status::Ok, node.state)))
+        Ok(Response::with((status::Ok, format!("{:?}\n", node.state))))
     }
 }

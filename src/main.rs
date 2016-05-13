@@ -24,6 +24,7 @@ enum NodeState {
     Leader
 }
 
+#[derive(Debug)]
 struct Node {
     id: i32,
     state: NodeState,
@@ -45,17 +46,16 @@ fn nodeById(id: i32) -> Node {
 }
 
 fn main() {
-    let node = Node::new(1);
     let mut router = Router::new();
     router.get("/state/:id", stateHandler);
 
     Iron::new(router).http("localhost:3000").unwrap();
 
     fn stateHandler(req: &mut Request) -> IronResult<Response> {
-        let idStr = req.extensions.get::<Router>().unwrap()
+        let id_str = req.extensions.get::<Router>().unwrap()
             .find("id").unwrap();
-        let id = idStr.parse::<i32>().unwrap();
+        let id = id_str.parse::<i32>().unwrap();
         let node = nodeById(id);
-        Ok(Response::with((status::Ok, format!("{:?}\n", node.state))))
+        Ok(Response::with((status::Ok, format!("{:?}\n", node))))
     }
 }
